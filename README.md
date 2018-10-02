@@ -40,6 +40,8 @@ Special thanks to the following github users:
 
 8. I hope NOW to have access your DOMAIN. You have to finalize the initial setup for NextCloud service.
 
+9. During the initial setup, select the desired database type (eg. MariaDB). Fill the hostname field for the database server, with the database-container name. (eg. db). For the db credentials, use the environmental variables found in the db.env file.
+
 # Follow these steps in order to update your NextCloud service
 
 1. First of all you have to stop and remove the old dockers. 
