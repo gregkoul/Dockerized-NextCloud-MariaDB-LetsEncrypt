@@ -40,7 +40,7 @@ services:
     links:
       - db
     volumes:
-      - /media/storage/nextcloud:/var/www/html
+      - /media/storage/nextcloud/web:/var/www/html
     networks:
       - proxy-tier
     restart: always
@@ -78,11 +78,11 @@ services:
       - 80:80
       - 443:443
     volumes:
-      - ./proxy/conf.d:/etc/nginx/conf.d
+      - /media/storage/nextcloud/proxy/conf.d:/etc/nginx/conf.d
       - ./uploadsize.conf:/etc/nginx/conf.d/uploadsize.conf:ro
-      - ./proxy/vhost.d:/etc/nginx/vhost.d
-      - ./proxy/html:/usr/share/nginx/html
-      - ./proxy/certs:/etc/nginx/certs:ro
+      - /media/storage/nextcloud/proxy/vhost.d:/etc/nginx/vhost.d
+      - /media/storage/nextcloud/proxy/html:/usr/share/nginx/html
+      - /media/storage/nextcloud/proxy/certs:/etc/nginx/certs:ro
       - /var/run/docker.sock:/tmp/docker.sock:ro
     networks:
       - proxy-tier
@@ -99,7 +99,7 @@ services:
       - proxy
     volumes:
       - /var/run/docker.sock:/var/run/docker.sock:ro
-      - ./proxy/certs:/etc/nginx/certs:rw
+      - /media/storage/nextcloud/proxy/certs:/etc/nginx/certs:rw
     restart: always
     depends_on:
       - proxy
