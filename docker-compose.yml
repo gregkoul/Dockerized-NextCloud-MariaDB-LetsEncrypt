@@ -8,7 +8,7 @@
 #   - https://github.com/JrCs/docker-letsencrypt-nginx-proxy-companion
 #
 
-version: '2'
+version: '3.2'
 
 ######################################################################################
 ###################################### SERVICES ######################################
@@ -19,7 +19,7 @@ services:
 ################################## DATABASE SERVICE ##################################
 
   db:
-    image: mariadb
+    image: mariadb:10.4.27-fpm
     container_name: db
     command: --transaction-isolation=READ-COMMITTED --binlog-format=ROW
     volumes:
@@ -30,12 +30,12 @@ services:
       - db.env
     networks:
       - proxy-tier
-    restart: always
+    restart: unless-stopped
 
 ################################## NEXTCLOUD SERVICE ##################################
 
   app:
-    image: nextcloud:fpm
+    image: nextcloud:24.0.7-fpm
     container_name: nextcloud_fpm
     links:
       - db
@@ -43,14 +43,14 @@ services:
       - /media/storage/nextcloud/web:/var/www/html
     networks:
       - proxy-tier
-    restart: always
+    restart: unless-stopped
     depends_on:
       - db
 
 ##################################### WEB SERVICE ####################################
 
   web:
-    image: nginx
+    image: nginx:1.23.2
     container_name: nextcloud_web
     volumes:
       - ./nginx.conf:/etc/nginx/nginx.conf:ro
@@ -65,20 +65,20 @@ services:
       - web.env
     networks:
       - proxy-tier
-    restart: always
+    restart: unless-stopped
     depends_on:
       - app
     
 #################################### PROXY SERVICE ###################################
 
   proxy:
-    image: jwilder/nginx-proxy
+    image: jwilder/nginx-proxy:1.0.3
     container_name: proxy
     ports:
       - 80:80
       - 443:443
     volumes:
-      - /media/storage/nextcloud/proxy/conf.d:/etc/nginx/conf.d
+      - /media/storage/nextcloud/proxy/conf.d:/etc/nginx/conf.d:rw
       - ./uploadsize.conf:/etc/nginx/conf.d/uploadsize.conf:ro
       - /media/storage/nextcloud/proxy/vhost.d:/etc/nginx/vhost.d
       - /media/storage/nextcloud/proxy/html:/usr/share/nginx/html
@@ -86,21 +86,21 @@ services:
       - /var/run/docker.sock:/tmp/docker.sock:ro
     networks:
       - proxy-tier
-    restart: always
+    restart: unless-stopped
     depends_on:
       - web
       
 ############################### LET'S ENCRYPT SERVICE ################################
 
   letsencrypt-companion:
-    image: jrcs/letsencrypt-nginx-proxy-companion
+    image: jrcs/letsencrypt-nginx-proxy-companion:v1.12.1
     container_name: letsencrypt-companion
     volumes_from:
       - proxy
     volumes:
       - /var/run/docker.sock:/var/run/docker.sock:ro
       - /media/storage/nextcloud/proxy/certs:/etc/nginx/certs:rw
-    restart: always
+    restart: unless-stopped
     depends_on:
       - proxy
 
