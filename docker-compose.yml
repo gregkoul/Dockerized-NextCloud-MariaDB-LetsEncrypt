@@ -7,35 +7,26 @@
 #   - https://github.com/jwilder/nginx-proxy
 #   - https://github.com/JrCs/docker-letsencrypt-nginx-proxy-companion
 #
-
-version: '3.2'
-
 ######################################################################################
 ###################################### SERVICES ######################################
 ######################################################################################
-
 services:
-
 ################################## DATABASE SERVICE ##################################
-
   db:
-    image: mariadb:10.4.27-fpm
+    image: mariadb:10.4.27-focal
     container_name: db
     command: --transaction-isolation=READ-COMMITTED --binlog-format=ROW
     volumes:
       - /media/storage/nextcloud/db:/var/lib/mysql
     environment:
-      - MYSQL_ROOT_PASSWORD=ChangeThisSecretPassword
+      - MYSQL_ROOT_PASSWORD=EncryptMyDomains
     env_file:
       - db.env
     networks:
       - proxy-tier
-    restart: unless-stopped
-
 ################################## NEXTCLOUD SERVICE ##################################
-
   app:
-    image: nextcloud:24.0.7-fpm
+    image: nextcloud:31.0.9-fpm
     container_name: nextcloud_fpm
     links:
       - db
@@ -43,14 +34,12 @@ services:
       - /media/storage/nextcloud/web:/var/www/html
     networks:
       - proxy-tier
-    restart: unless-stopped
+    restart: always
     depends_on:
       - db
-
 ##################################### WEB SERVICE ####################################
-
   web:
-    image: nginx:1.23.2
+    image: nginx:1.26.3
     container_name: nextcloud_web
     volumes:
       - ./nginx.conf:/etc/nginx/nginx.conf:ro
@@ -65,12 +54,10 @@ services:
       - web.env
     networks:
       - proxy-tier
-    restart: unless-stopped
+    restart: always
     depends_on:
       - app
-    
 #################################### PROXY SERVICE ###################################
-
   proxy:
     image: jwilder/nginx-proxy:1.0.3
     container_name: proxy
@@ -86,12 +73,10 @@ services:
       - /var/run/docker.sock:/tmp/docker.sock:ro
     networks:
       - proxy-tier
-    restart: unless-stopped
+    restart: always
     depends_on:
       - web
-      
 ############################### LET'S ENCRYPT SERVICE ################################
-
   letsencrypt-companion:
     image: jrcs/letsencrypt-nginx-proxy-companion:v1.12.1
     container_name: letsencrypt-companion
@@ -100,14 +85,12 @@ services:
     volumes:
       - /var/run/docker.sock:/var/run/docker.sock:ro
       - /media/storage/nextcloud/proxy/certs:/etc/nginx/certs:rw
-    restart: unless-stopped
+    restart: always
     depends_on:
       - proxy
-
 ######################################################################################
 ###################################### NETWORKS ######################################
 ######################################################################################
-      
 networks:
   proxy-tier:
     external:
